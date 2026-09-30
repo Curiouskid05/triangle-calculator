@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e0661b">
+<meta name="description" content="Right-angled and any-triangle calculator for bracing, stringers and roof pitch.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Triangle">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Triangle Calculator</title>
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --panel2:#f0f2f5; --text:#1b1f24; --muted:#667085; --border:#dde1e7;
+  --accent:#e0661b; --accent-soft:#fde9dc; --ok:#2f8f5b; --bad:#c2410c; --fill:#fdf1e8; --calc:#2563eb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111418; --panel:#181c21; --panel2:#1f242a; --text:#e6e8eb; --muted:#8b95a3; --border:#2b313a;
+    --accent:#ff8a3d; --accent-soft:#3a2415; --ok:#4fbf85; --bad:#ff8a5c; --fill:#2a1d14; --calc:#60a5fa;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111418; --panel:#181c21; --panel2:#1f242a; --text:#e6e8eb; --muted:#8b95a3; --border:#2b313a;
+  --accent:#ff8a3d; --accent-soft:#3a2415; --ok:#4fbf85; --bad:#ff8a5c; --fill:#2a1d14; --calc:#60a5fa;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select{font:inherit;color:inherit}
+button{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+button:hover{border-color:var(--muted)}
+header{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+header h1{font-size:15px;margin:0 8px 0 0;font-weight:700}
+header h1 span{color:var(--accent)}
+header .grow{flex:1}
+.home{color:var(--muted);text-decoration:none;font-weight:600;white-space:nowrap}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{border:none;border-radius:0;background:var(--panel)}
+.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+select{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:4px 6px}
+.wrap{max-width:1180px;margin:0 auto;padding:16px;display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px}
+.panel h2{margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.help{color:var(--muted);font-size:12.5px;margin:0 0 10px}
+.field{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;margin:7px 0}
+.field .sym{font:italic 700 17px Georgia,serif;text-align:center;color:var(--muted)}
+.field.given .sym{color:var(--accent)}
+.field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:2px}
+.field .inp{display:flex;align-items:center;background:var(--panel2);border:1px solid var(--border);border-radius:7px}
+.field.given .inp{border-color:var(--accent);background:var(--accent-soft)}
+.field input{border:none;background:transparent;padding:6px 8px;width:100%;min-width:0;outline:none;font-variant-numeric:tabular-nums}
+.field .unit{color:var(--muted);font-size:12px;padding-right:8px}
+.field .x{border:none;background:none;color:var(--muted);padding:2px 6px;visibility:hidden}
+.field.given .x{visibility:visible}
+.sep{border-top:1px solid var(--border);margin:10px 0}
+.status{margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--panel2);font-size:13px}
+.status.err{background:var(--accent-soft);color:var(--bad)}
+.status.ok{color:var(--ok)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chips button{font-size:12px;padding:3px 9px;border-radius:999px}
+.row2{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.main{display:grid;gap:16px}
+.diagram{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:8px;position:relative}
+.diagram svg{display:block;width:100%;height:auto;max-height:430px}
+.solpick{position:absolute;top:10px;right:10px;display:flex;gap:6px;align-items:center;font-size:12.5px}
+.legend{position:absolute;left:12px;top:10px;font-size:12px;color:var(--muted);display:flex;gap:12px}
+.legend b{color:var(--accent)} .legend i{font-style:normal;color:var(--calc);font-weight:600}
+table{border-collapse:collapse;width:100%}
+td,th{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left}
+th{color:var(--muted);font-weight:600;font-size:12px}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.given{color:var(--accent);font-weight:600}
+td.calc{color:var(--calc);font-weight:600}
+td.copy{cursor:copy}
+td.copy:hover{background:var(--panel2)}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.res h3{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.toast{position:fixed;right:16px;bottom:16px;background:var(--text);color:var(--bg);padding:7px 12px;border-radius:8px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+svg text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (max-width:860px){ .wrap{grid-template-columns:1fr} .res{grid-template-columns:1fr} }
+header{padding-top:max(8px, env(safe-area-inset-top));padding-left:max(16px, env(safe-area-inset-left));padding-right:max(16px, env(safe-area-inset-right))}
+body{padding-bottom:env(safe-area-inset-bottom)}
+#installBtn{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>Triangle <span>Calculator</span></h1>
+  <div class="seg" id="modeSeg"><button data-m="right" class="on">Right-angled</button><button data-m="any">Any triangle</button></div>
+  <span class="grow"></span>
+  <label style="color:var(--muted)">mm <select id="decL"><option value="0">0</option><option value="1" selected>0.0</option><option value="2">0.00</option></select></label>
+  <label style="color:var(--muted)">° <select id="decA"><option value="1">0.0</option><option value="2" selected>0.00</option><option value="3">0.000</option></select></label>
+  <button id="installBtn" hidden>Install app</button>
+  <button id="themeBtn" title="Toggle light/dark">◐</button>
+</header>
+
+<div class="wrap">
+  <section class="panel">
+    <h2 id="inTitle">Enter any 2 values</h2>
+    <p class="help" id="inHelp"></p>
+    <div id="fields"></div>
+    <div class="row2"><button id="clearBtn">Clear all</button><span class="muted" style="color:var(--muted);font-size:12px">Angles: 35.5 or 35°30' or 35 30 0</span></div>
+    <div class="status" id="status"></div>
+    <div class="chips" id="examples"></div>
+  </section>
+
+  <section class="main">
+    <div class="diagram">
+      <div class="legend"><span><b>■</b> given</span><span><i>■</i> calculated</span></div>
+      <div class="solpick" id="solpick" hidden></div>
+      <svg id="svg" viewBox="0 0 760 430" role="img" aria-label="Triangle diagram"></svg>
+    </div>
+    <div class="res">
+      <div class="panel"><h3>Sides &amp; angles</h3><table id="tblMain"></table></div>
+      <div class="panel"><h3 id="extraTitle">More</h3><table id="tblExtra"></table></div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const RAD = Math.PI / 180;
+const OPP = { a: 'A', b: 'B', c: 'C', A: 'a', B: 'b', C: 'c' };
+let mode = 'right', solIdx = 0;
+const vals = { right: {}, any: {} };   // raw text per field
+
+const FIELDS = {
+  right: [
+    { k: 'a', name: 'Rise', desc: 'vertical leg', unit: 'mm' },
+    { k: 'b', name: 'Run', desc: 'horizontal leg', unit: 'mm' },
+    { k: 'c', name: 'Hypotenuse', desc: 'sloping side, e.g. brace or stringer', unit: 'mm' },
+    { sep: true },
+    { k: 'A', name: 'Angle A', desc: 'slope angle, between run and hypotenuse', unit: '°' },
+    { k: 'B', name: 'Angle B', desc: 'between rise and hypotenuse', unit: '°' },
+  ],
+  any: [
+    { k: 'a', name: 'Side a', desc: 'opposite angle A', unit: 'mm' },
+    { k: 'b', name: 'Side b', desc: 'opposite angle B', unit: 'mm' },
+    { k: 'c', name: 'Side c', desc: 'opposite angle C', unit: 'mm' },
+    { sep: true },
+    { k: 'A', name: 'Angle A', unit: '°' },
+    { k: 'B', name: 'Angle B', unit: '°' },
+    { k: 'C', name: 'Angle C', unit: '°' },
+  ],
+};
+const EXAMPLES = {
+  right: [
+    { t: 'Brace 6000 × 4000', v: { b: '6000', a: '4000' } },
+    { t: 'Stair: rise 2800 @ 38°', v: { a: '2800', A: '38' } },
+    { t: 'Roof 5000 run @ 22.5°', v: { b: '5000', A: '22.5' } },
+    { t: 'Ramp 1:14 over 7000', v: { b: '7000', a: '500' } },
+  ],
+  any: [
+    { t: 'Three sides', v: { a: '5000', b: '6000', c: '7000' } },
+    { t: 'Two sides + angle between', v: { b: '4000', c: '6000', A: '75' } },
+    { t: 'Two angles + side', v: { A: '40', B: '65', c: '8000' } },
+    { t: 'Two answers (SSA)', v: { a: '4200', b: '5000', A: '48' } },
+  ],
+};
+
+/* ---------- parsing & formatting ---------- */
+function parseNum(s) { if (s == null || !String(s).trim()) return null; const v = Number(String(s).replace(/,/g, '').trim()); return isFinite(v) ? v : NaN; }
+// Accepts 35.5, 35°30', 35°30'15", 35 30 15, 35d30m
+function parseAngle(s) {
+  if (s == null || !String(s).trim()) return null;
+  const t = String(s).trim();
+  if (/^[-+]?\d*\.?\d+$/.test(t)) return +t;
+  const parts = t.split(/[°º'′"″\sdms:]+/i).filter(Boolean).map(Number);
+  if (!parts.length || parts.some(x => !isFinite(x)) || parts.length > 3) return NaN;
+  return (parts[0] || 0) + (parts[1] || 0) / 60 + (parts[2] || 0) / 3600;
+}
+const decL = () => +$('decL').value, decA = () => +$('decA').value;
+const fL = v => v.toLocaleString(undefined, { minimumFractionDigits: decL(), maximumFractionDigits: decL() });
+const fA = v => v.toFixed(decA()) + '°';
+function dms(v) {
+  let d = Math.floor(v), m = Math.floor((v - d) * 60), s = Math.round(((v - d) * 60 - m) * 60);
+  if (s === 60) { s = 0; m++; } if (m === 60) { m = 0; d++; }
+  return `${d}° ${String(m).padStart(2, '0')}′ ${String(s).padStart(2, '0')}″`;
+}
+
+/* ---------- solver ---------- */
+// g: known values {a,b,c (mm), A,B,C (degrees)}; exactly three knowns, at least one side.
+function solve(g) {
+  const sides = ['a', 'b', 'c'].filter(k => g[k] != null), angs = ['A', 'B', 'C'].filter(k => g[k] != null);
+  for (const k of sides) if (!(g[k] > 0)) return { err: `Side ${k} must be greater than 0.` };
+  for (const k of angs) if (!(g[k] > 0 && g[k] < 180)) return { err: `Angle ${k} must be between 0° and 180°.` };
+  if (angs.reduce((s, k) => s + g[k], 0) >= 180 - 1e-9) return { err: 'The given angles add up to 180° or more, so no triangle is possible.' };
+  const done = t => {
+    const out = { a: t.a, b: t.b, c: t.c, A: t.A, B: t.B, C: t.C };
+    if (['a', 'b', 'c', 'A', 'B', 'C'].some(k => !(out[k] > 0) || !isFinite(out[k]))) return null;
+    return out;
+  };
+  const sss = (a, b, c) => {
+    const cl = x => Math.max(-1, Math.min(1, x));
+    const A = Math.acos(cl((b * b + c * c - a * a) / (2 * b * c))) / RAD;
+    const B = Math.acos(cl((a * a + c * c - b * b) / (2 * a * c))) / RAD;
+    return done({ a, b, c, A, B, C: 180 - A - B });
+  };
+  if (sides.length === 3) {
+    const [a, b, c] = [g.a, g.b, g.c], tol = 1e-9 * (a + b + c);
+    if (a + b <= c + tol || a + c <= b + tol || b + c <= a + tol) return { err: 'These three sides can\'t make a triangle: any two sides must add up to more than the third.' };
+    return { sols: [sss(a, b, c)] };
+  }
+  if (sides.length === 1) {
+    const t = { ...g };
+    const missing = ['A', 'B', 'C'].find(k => t[k] == null);
+    t[missing] = 180 - angs.reduce((s, k) => s + g[k], 0);
+    const s = sides[0], ratio = g[s] / Math.sin(t[OPP[s]] * RAD);
+    for (const k of ['a', 'b', 'c']) if (t[k] == null) t[k] = ratio * Math.sin(t[OPP[k]] * RAD);
+    return { sols: [done(t)] };
+  }
+  // two sides + one angle
+  const K = angs[0];
+  if (g[OPP[K]] == null) {            // angle between the two sides (SAS)
+    const [s1, s2] = sides, th = g[K] * RAD;
+    const third = Math.sqrt(g[s1] ** 2 + g[s2] ** 2 - 2 * g[s1] * g[s2] * Math.cos(th));
+    const t = { a: g.a, b: g.b, c: g.c }; t[OPP[K]] = third;
+    return { sols: [sss(t.a, t.b, t.c)] };
+  }
+  // angle opposite a known side (SSA): may have 0, 1 or 2 answers
+  const sK = OPP[K], s2 = sides.find(k => k !== sK), A2 = OPP[s2];
+  const sinv = g[s2] * Math.sin(g[K] * RAD) / g[sK];
+  if (sinv > 1 + 1e-12) return { err: `Side ${sK} is too short to reach: no triangle fits these values.` };
+  const base = Math.asin(Math.min(1, sinv)) / RAD, sols = [];
+  for (const cand of (Math.abs(base - 90) < 1e-9 ? [base] : [base, 180 - base])) {
+    if (cand + g[K] >= 180 - 1e-9) continue;
+    const t = { ...g }; t[A2] = cand;
+    const last = ['A', 'B', 'C'].find(k => t[k] == null); t[last] = 180 - g[K] - cand;
+    const ratio = g[sK] / Math.sin(g[K] * RAD);
+    t[OPP[last]] = ratio * Math.sin(t[last] * RAD);
+    const d = done(t); if (d) sols.push(d);
+  }
+  return sols.length ? { sols, ambiguous: sols.length > 1 } : { err: 'No triangle fits these values.' };
+}
+
+/* ---------- UI ---------- */
+function known() {
+  const out = {};
+  for (const f of FIELDS[mode]) if (f.k) {
+    const raw = vals[mode][f.k];
+    const v = f.unit === '°' ? parseAngle(raw) : parseNum(raw);
+    if (v !== null) out[f.k] = v;
+  }
+  return out;
+}
+function renderFields() {
+  $('fields').innerHTML = FIELDS[mode].map(f => f.sep ? '<div class="sep"></div>' : `
+    <div class="field" data-k="${f.k}">
+      <div class="sym">${f.k}</div>
+      <div><label for="in_${f.k}">${f.name}${f.desc ? ` <span style="opacity:.8">· ${f.desc}</span>` : ''}</label>
+        <div class="inp"><input id="in_${f.k}" inputmode="decimal" autocomplete="off" value="${vals[mode][f.k] ?? ''}"><span class="unit">${f.unit}</span></div></div>
+      <button class="x" title="Clear" data-clear="${f.k}">×</button>
+    </div>`).join('');
+  $('fields').querySelectorAll('input').forEach(inp => inp.oninput = () => { vals[mode][inp.id.slice(3)] = inp.value; solIdx = 0; update(); });
+  $('fields').querySelectorAll('[data-clear]').forEach(b => b.onclick = () => { vals[mode][b.dataset.clear] = ''; $('in_' + b.dataset.clear).value = ''; solIdx = 0; update(); });
+  $('inTitle').textContent = mode === 'right' ? 'Enter any 2 values' : 'Enter any 3 values';
+  $('inHelp').textContent = mode === 'right'
+    ? 'The right angle is at C, between rise and run. At least one value must be a length.'
+    : 'Sides a, b, c are opposite angles A, B, C. At least one value must be a side.';
+  $('examples').innerHTML = '<span style="color:var(--muted);font-size:12px;width:100%">Examples:</span>' + EXAMPLES[mode].map((e, i) => `<button data-ex="${i}">${e.t}</button>`).join('');
+  $('examples').querySelectorAll('[data-ex]').forEach(b => b.onclick = () => { vals[mode] = { ...EXAMPLES[mode][+b.dataset.ex].v }; solIdx = 0; renderFields(); update(); });
+  document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
+}
+
+function update() {
+  const g = known(), need = mode === 'right' ? 2 : 3;
+  const entered = Object.keys(g);
+  document.querySelectorAll('.field').forEach(el => el.classList.toggle('given', entered.includes(el.dataset.k)));
+  const st = $('status'); st.className = 'status';
+  const bad = entered.filter(k => isNaN(g[k]));
+  let res = null;
+  if (bad.length) { st.classList.add('err'); st.textContent = `Can't read the value in ${bad.join(', ')}.`; }
+  else if (entered.length < need) st.textContent = `${entered.length} of ${need} values entered.`;
+  else if (entered.length > need) { st.classList.add('err'); st.textContent = `Too many values: enter exactly ${need}. Clear ${entered.length - need} with ×.`; }
+  else {
+    const input = { ...g };
+    if (mode === 'right') {
+      if (input.A != null && input.A >= 90 || input.B != null && input.B >= 90) { st.classList.add('err'); st.textContent = 'In a right-angled triangle, angles A and B must be less than 90°.'; }
+      else if (input.c != null && (input.a >= input.c || input.b >= input.c)) { st.classList.add('err'); st.textContent = 'The hypotenuse must be longer than the rise and the run.'; }
+      else if (input.A != null && input.B != null) { st.classList.add('err'); st.textContent = 'Two angles fix the shape but not the size. Enter at least one length.'; }
+      else { input.C = 90; res = solve(input); }
+    } else res = solve(input);
+    if (res && res.err) { st.classList.add('err'); st.textContent = res.err; res = null; }
+    else if (res && !res.sols?.[0]) { st.classList.add('err'); st.textContent = 'No triangle fits these values.'; res = null; }
+    else if (res) {
+      st.classList.add('ok');
+      st.textContent = res.ambiguous ? '✓ Two different triangles fit these values. Pick one at the top right of the drawing.' : '✓ Solved.';
+    }
+  }
+  if (res && solIdx >= res.sols.length) solIdx = 0;
+  const sol = res ? res.sols[solIdx] : null;
+  const pick = $('solpick');
+  pick.hidden = !(res && res.ambiguous);
+  if (res && res.ambiguous) {
+    pick.innerHTML = 'Solution: ' + res.sols.map((s, i) => `<button class="${i === solIdx ? 'on' : ''}" style="${i === solIdx ? 'background:var(--accent);color:#fff;border-color:var(--accent)' : ''}" data-s="${i}">${i + 1} (C = ${s.C.toFixed(1)}°)</button>`).join('');
+    pick.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { solIdx = +b.dataset.s; update(); });
+  }
+  draw(sol, g); tables(sol, g);
+}
+
+/* ---------- diagram ---------- */
+function draw(sol, g) {
+  const svg = $('svg'), W = 760, H = 430, pad = 70;
+  const cs = getComputedStyle(document.documentElement), col = n => cs.getPropertyValue(n).trim();
+  if (!sol) {
+    svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" fill="${col('--muted')}" font-size="15">Enter values to draw the triangle</text>`;
+    return;
+  }
+  // Vertices: A at origin, side b along +x to C, B above. Right mode: right angle at C, so run is horizontal and rise vertical.
+  const A = [0, 0], C = [sol.b, 0], B = [sol.c * Math.cos(sol.A * RAD), sol.c * Math.sin(sol.A * RAD)];
+  const xs = [A[0], B[0], C[0]], ys = [A[1], B[1], C[1]];
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const s = Math.min((W - 2 * pad) / (maxX - minX || 1), (H - 2 * pad) / (maxY - minY || 1));
+  const ox = (W - (maxX - minX) * s) / 2 - minX * s, oy = (H + (maxY - minY) * s) / 2 + minY * s;
+  const P = p => [ox + p[0] * s, oy - p[1] * s];
+  const pA = P(A), pB = P(B), pC = P(C), cen = [(pA[0] + pB[0] + pC[0]) / 3, (pA[1] + pB[1] + pC[1]) / 3];
+  const accent = col('--accent'), calc = col('--calc'), text = col('--text'), muted = col('--muted');
+  const clr = k => g[k] != null ? accent : calc;
+  let out = `<polygon points="${[pA, pB, pC].map(p => p.join(',')).join(' ')}" fill="${col('--fill')}" stroke="${text}" stroke-width="2" stroke-linejoin="round"/>`;
+  // side labels: midpoint pushed away from the centroid
+  const side = (p, q, k, name) => {
+    // Push the two-line label out along the side's normal (away from the centroid) far enough to clear the line
+    const m = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2], ex = q[0] - p[0], ey = q[1] - p[1], L = Math.hypot(ex, ey) || 1;
+    let nx = -ey / L, ny = ex / L; if (nx * (m[0] - cen[0]) + ny * (m[1] - cen[1]) < 0) { nx = -nx; ny = -ny; }
+    const halfW = Math.max(fL(sol[k]).length * 8.5, ((name || '').length + 4) * 6.5) / 2;
+    const off = 10 + Math.abs(nx) * halfW + Math.abs(ny) * 18;
+    const x = m[0] + nx * off, y = m[1] + ny * off;
+    out += `<text x="${x}" y="${y - 2}" text-anchor="middle" font-size="15" font-weight="700" fill="${clr(k)}">${fL(sol[k])}</text>`;
+    out += `<text x="${x}" y="${y + 14}" text-anchor="middle" font-size="12" fill="${muted}"><tspan font-style="italic" font-family="Georgia,serif">${k}</tspan>${name ? ' · ' + name : ''}</text>`;
+  };
+  const names = mode === 'right' ? { a: 'rise', b: 'run', c: 'hypotenuse' } : {};
+  side(pB, pC, 'a', names.a); side(pA, pC, 'b', names.b); side(pA, pB, 'c', names.c);
+  // angle arcs and labels
+  const angle = (p, q1, q2, k) => {
+    const a1 = Math.atan2(q1[1] - p[1], q1[0] - p[0]), a2 = Math.atan2(q2[1] - p[1], q2[0] - p[0]);
+    let d = a2 - a1; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+    const r = 30, mid = a1 + d / 2;
+    if (mode === 'right' && k === 'C') {
+      const u1 = [Math.cos(a1) * 16, Math.sin(a1) * 16], u2 = [Math.cos(a2) * 16, Math.sin(a2) * 16];
+      out += `<path d="M${p[0] + u1[0]},${p[1] + u1[1]} L${p[0] + u1[0] + u2[0]},${p[1] + u1[1] + u2[1]} L${p[0] + u2[0]},${p[1] + u2[1]}" fill="none" stroke="${muted}" stroke-width="1.5"/>`;
+    } else {
+      const e1 = [p[0] + r * Math.cos(a1), p[1] + r * Math.sin(a1)], e2 = [p[0] + r * Math.cos(a2), p[1] + r * Math.sin(a2)];
+      out += `<path d="M${e1[0]},${e1[1]} A${r},${r} 0 0 ${d > 0 ? 1 : 0} ${e2[0]},${e2[1]}" fill="none" stroke="${clr(k)}" stroke-width="1.8"/>`;
+    }
+    const lr = Math.abs(d) < 0.5 ? 70 : 52, lx = p[0] + lr * Math.cos(mid), ly = p[1] + lr * Math.sin(mid);
+    out += `<text x="${lx}" y="${ly + 5}" text-anchor="middle" font-size="14" font-weight="700" fill="${mode === 'right' && k === 'C' ? muted : clr(k)}">${mode === 'right' && k === 'C' ? '90°' : fA(sol[k])}</text>`;
+    // vertex letter, outside the triangle
+    let vx = p[0] - cen[0], vy = p[1] - cen[1]; const vl = Math.hypot(vx, vy) || 1;
+    out += `<text x="${p[0] + vx / vl * 20}" y="${p[1] + vy / vl * 20 + 5}" text-anchor="middle" font-size="16" font-style="italic" font-weight="700" font-family="Georgia,serif" fill="${text}">${k}</text>`;
+  };
+  angle(pA, pC, pB, 'A'); angle(pB, pA, pC, 'B'); angle(pC, pB, pA, 'C');
+  svg.innerHTML = out;
+}
+
+/* ---------- result tables ---------- */
+function tables(sol, g) {
+  const tm = $('tblMain'), te = $('tblExtra');
+  if (!sol) { tm.innerHTML = te.innerHTML = '<tr><td style="color:var(--muted)">–</td></tr>'; return; }
+  const cls = k => g[k] != null ? 'given' : 'calc';
+  const label = { right: { a: 'Rise', b: 'Run', c: 'Hypotenuse', A: 'Angle A (slope)', B: 'Angle B', C: 'Angle C' }, any: { a: 'Side a', b: 'Side b', c: 'Side c', A: 'Angle A', B: 'Angle B', C: 'Angle C' } }[mode];
+  const rowL = k => `<tr><td>${label[k]}</td><td class="num copy ${cls(k)}" data-copy="${sol[k].toFixed(decL())}">${fL(sol[k])} mm</td><td></td></tr>`;
+  const rowA = k => `<tr><td>${label[k]}</td><td class="num copy ${mode === 'right' && k === 'C' ? '' : cls(k)}" data-copy="${sol[k].toFixed(decA())}">${fA(sol[k])}</td><td class="num" style="color:var(--muted)">${dms(sol[k])}</td></tr>`;
+  tm.innerHTML = '<tr><th></th><th style="text-align:right">Value</th><th style="text-align:right">Deg-min-sec</th></tr>' + ['a', 'b', 'c'].map(rowL).join('') + ['A', 'B', 'C'].map(rowA).join('');
+  const s = (sol.a + sol.b + sol.c) / 2;
+  const area = Math.sqrt(Math.max(0, s * (s - sol.a) * (s - sol.b) * (s - sol.c)));
+  const r = (t, v, copy) => `<tr><td>${t}</td><td class="num copy" data-copy="${copy ?? v}">${v}</td></tr>`;
+  let rows = '';
+  if (mode === 'right') {
+    $('extraTitle').textContent = 'Slope';
+    const slope = sol.a / sol.b;
+    rows += r('Slope (grade)', (slope * 100).toFixed(2) + ' %', (slope * 100).toFixed(2));
+    rows += r('Ratio (rise : run)', '1 : ' + (sol.b / sol.a).toFixed(2), (sol.b / sol.a).toFixed(2));
+    rows += r('Rise per metre of run', fL(slope * 1000) + ' mm', (slope * 1000).toFixed(decL()));
+    rows += r('Rise per metre along slope', fL(Math.sin(sol.A * RAD) * 1000) + ' mm', (Math.sin(sol.A * RAD) * 1000).toFixed(decL()));
+    rows += r('Area', (area / 1e6).toFixed(3) + ' m²', (area / 1e6).toFixed(3));
+    rows += r('Perimeter', fL(sol.a + sol.b + sol.c) + ' mm', (sol.a + sol.b + sol.c).toFixed(decL()));
+    rows += r('Height to hypotenuse', fL(sol.a * sol.b / sol.c) + ' mm', (sol.a * sol.b / sol.c).toFixed(decL()));
+  } else {
+    $('extraTitle').textContent = 'Area, perimeter, heights';
+    rows += r('Area', (area / 1e6).toFixed(3) + ' m²', (area / 1e6).toFixed(3));
+    rows += r('Perimeter', fL(sol.a + sol.b + sol.c) + ' mm', (sol.a + sol.b + sol.c).toFixed(decL()));
+    for (const k of ['a', 'b', 'c']) rows += r(`Height to side ${k}`, fL(2 * area / sol[k]) + ' mm', (2 * area / sol[k]).toFixed(decL()));
+    rows += r('Inscribed circle radius', fL(area / s) + ' mm', (area / s).toFixed(decL()));
+    rows += r('Circumscribed circle radius', fL(sol.a / (2 * Math.sin(sol.A * RAD))) + ' mm', (sol.a / (2 * Math.sin(sol.A * RAD))).toFixed(decL()));
+  }
+  te.innerHTML = rows;
+  document.querySelectorAll('[data-copy]').forEach(td => { td.title = 'Click to copy'; td.onclick = () => copy(td.dataset.copy); });
+}
+let tt; function copy(v) {
+  const done = () => { const t = $('toast'); t.textContent = `Copied ${v}`; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 1500); };
+  try { navigator.clipboard.writeText(v).then(done, done); } catch { done(); }
+}
+
+/* ---------- wiring ---------- */
+document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => { mode = b.dataset.m; solIdx = 0; try { localStorage.setItem('triMode', mode); } catch {} renderFields(); update(); });
+$('clearBtn').onclick = () => { vals[mode] = {}; solIdx = 0; renderFields(); update(); };
+$('decL').onchange = $('decA').onchange = update;
+$('themeBtn').onclick = () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark'; update();
+};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', update);
+try { const m = localStorage.getItem('triMode'); if (m === 'any' || m === 'right') mode = m; } catch {}
+// Open both modes on a worked example so the first view shows a solved triangle
+vals.right = { ...EXAMPLES.right[0].v };
+vals.any = { ...EXAMPLES.any[0].v };
+renderFields(); update();
+window.__tri = { solve }; // for checking in devtools
+</script>
+<script>
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+let installEvt = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; document.getElementById('installBtn').hidden = false; });
+document.getElementById('installBtn').onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; document.getElementById('installBtn').hidden = true; };
+addEventListener('appinstalled', () => { document.getElementById('installBtn').hidden = true; });
+</script>
+</body>
+</html>
